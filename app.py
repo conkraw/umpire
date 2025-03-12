@@ -20,26 +20,43 @@ umpire_names = ["Select an umpire"] + [record["legal_name"] for record in st.sec
 # Extract available dates from secrets.
 available_dates = [record["date"] for record in st.secrets["available_dates"]["data_record"]]
 
+# Initialize session state for selected umpire and dates.
+if "selected_name" not in st.session_state:
+    st.session_state.selected_name = "Select an umpire"
+if "selected_dates" not in st.session_state:
+    st.session_state.selected_dates = []
+
 # Create two columns for layout.
 col1, col2 = st.columns(2)
 
 with col1:
-    selected_name = st.selectbox("Select an umpire", umpire_names, index=0)
+    # Use the session state value as default.
+    selected_name = st.selectbox(
+        "Select an umpire",
+        umpire_names,
+        index=umpire_names.index(st.session_state.selected_name),
+        key="selected_name"
+    )
 
 if selected_name != "Select an umpire":
     # Use the selected umpire's name as the document ID.
     doc_ref = db.collection("chocolateumpire").document(selected_name)
     doc = doc_ref.get()
     
-    # Retrieve previously selected dates if they exist.
+    # Retrieve previously selected dates from Firestore if available.
     if doc.exists:
         existing_dates = doc.to_dict().get("Dates", [])
+        st.session_state.selected_dates = existing_dates  # update session state
     else:
-        existing_dates = []
+        existing_dates = st.session_state.selected_dates
 
-    # Show the multiselect widget in the second column.
     with col2:
-        selected_dates = st.multiselect("Select date(s)", available_dates, default=existing_dates)
+        selected_dates = st.multiselect(
+            "Select date(s)",
+            available_dates,
+            default=existing_dates,
+            key="selected_dates"
+        )
 
     # Save button to update or create the document.
     if st.button("Save"):
@@ -48,8 +65,14 @@ if selected_name != "Select an umpire":
             "Dates": selected_dates
         })
         st.success("Data saved successfully!")
-
-    # If the selected umpire is Abigail, show the admin password input and report generation.
+        
+        # For umpires other than Abigail, clear the selections and rerun the app.
+        if selected_name != "Abigail":
+            st.session_state.selected_name = "Select an umpire"
+            st.session_state.selected_dates = []
+            st.experimental_rerun()
+    
+    # If the selected umpire is Abigail, show admin options.
     if selected_name == "Abigail":
         admin_password = st.text_input("Enter admin password to generate report", type="password")
         if admin_password:
@@ -63,18 +86,18 @@ if selected_name != "Select an umpire":
                     umpire = doc_data.get("Umpire", "")
                     umpire_dates = doc_data.get("Dates", [])
                     row = {"Umpire": umpire}
-                    # For each available date, mark "X" if the umpire selected it.
+                    # Mark an "X" for each available date if selected.
                     for date in available_dates:
                         row[date] = "X" if date in umpire_dates else ""
                     data.append(row)
                 df = pd.DataFrame(data)
-
+                
                 # Write DataFrame to an Excel file in memory.
                 buffer = BytesIO()
                 with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
                     df.to_excel(writer, index=False, sheet_name="Availability")
                 buffer.seek(0)
-
+                
                 st.download_button(
                     label="Download Excel File",
                     data=buffer,
@@ -87,4 +110,5 @@ else:
     with col2:
         st.multiselect("Select date(s)", available_dates, default=[])
     st.write("Please select an umpire.")
+
 
