@@ -1,11 +1,10 @@
 import streamlit as st
 
+# Extract umpire names from the secrets file.
 names = [record["legal_name"] for record in st.secrets["dataset_record"]["data_record"]]
 
-# Extract available dates from secrets.
-# You need to define these in your secrets file, for example:
-# available_dates = ["2025-03-14", "2025-03-15", "2025-03-16"]
-dates = [record["date"] for record in st.secrets["available_dates"]["data_record"]]
+# Extract available dates from secrets by iterating over the data_record list.
+available_dates = [record["date"] for record in st.secrets["available_dates"]["data_record"]]
 
 # Create two columns for layout.
 col1, col2 = st.columns(2)
