@@ -2,6 +2,7 @@ import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
 
+st.title("Chocolate Umpire Date Availability Application")
 # Initialize Firebase connection
 firebase_creds = st.secrets["firebase_service_account"].to_dict()
 if not firebase_admin._apps:
