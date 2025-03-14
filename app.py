@@ -104,7 +104,7 @@ def data_entry():
             
                         # Define alternating row formats.
                         even_format = workbook.add_format({
-                            'bg_color': '#F2F2F2',  # light gray background
+                            'bg_color': '#F2F2F2',  # light gray background for even rows
                             'border': 1,
                             'align': 'center',
                             'valign': 'vcenter'
@@ -114,22 +114,8 @@ def data_entry():
                             'align': 'center',
                             'valign': 'vcenter'
                         })
-
-                        even_formula = '=AND(MOD(ROW(),2)=0, INDIRECT(ADDRESS(ROW(), COLUMN()))<>"X")'
-                        odd_formula  = '=AND(MOD(ROW(),2)=1, INDIRECT(ADDRESS(ROW(), COLUMN()))<>"X")'
                         
-                        worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
-                            'type': 'formula',
-                            'criteria': even_formula,
-                            'format': even_format
-                        })
-                        worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
-                            'type': 'formula',
-                            'criteria': odd_formula,
-                            'format': odd_format
-                        })
-
-                        # Apply conditional formatting for alternating rows.
+                        # Apply alternating row conditional formatting.
                         worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
                             'type': 'formula',
                             'criteria': '=MOD(ROW(),2)=0',
@@ -139,6 +125,21 @@ def data_entry():
                             'type': 'formula',
                             'criteria': '=MOD(ROW(),2)=1',
                             'format': odd_format
+                        })
+                        
+                        # Define format for cells containing "X".
+                        x_format = workbook.add_format({
+                            'bg_color': '#FFC7CE',  # light red background for "X"
+                            'border': 1,
+                            'align': 'center',
+                            'valign': 'vcenter'
+                        })
+                        
+                        # Apply the "X" rule after the alternating rules so it overrides them.
+                        worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
+                            'type': 'formula',
+                            'criteria': '=TRIM(UPPER(A2))="X"',
+                            'format': x_format
                         })
             
                         # Freeze the top row and first column.
