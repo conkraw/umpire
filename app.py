@@ -130,7 +130,40 @@ def data_entry():
                             'criteria': '=MOD(ROW(),2)=1',
                             'format': odd_format
                         })
-        
+
+                    # Freeze the top row and first column for easier navigation
+                    worksheet.freeze_panes(1, 1)
+                    
+                    # Enable an auto filter on the header row
+                    worksheet.autofilter(0, 0, num_rows, num_cols - 1)
+                    
+                    # Adjust column widths with a wrap format to handle long text
+                    wrap_format = workbook.add_format({
+                        'align': 'center',
+                        'valign': 'vcenter',
+                        'text_wrap': True,
+                        'border': 1
+                    })
+                    for i, col in enumerate(df.columns):
+                        worksheet.set_column(i, i, 20, wrap_format)
+                    
+                    # Optional: Highlight cells containing "X"
+                    worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
+                        'type': 'cell',
+                        'criteria': '==',
+                        'value': '"X"',
+                        'format': workbook.add_format({
+                            'bg_color': '#FFC7CE',
+                            'border': 1,
+                            'align': 'center',
+                            'valign': 'vcenter'
+                        })
+                    })
+                    
+                    # Page setup for printing/viewing
+                    worksheet.set_landscape()
+                    worksheet.fit_to_pages(1, 0)
+
                     buffer.seek(0)
         
                     st.download_button(
