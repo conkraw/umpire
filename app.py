@@ -162,7 +162,7 @@ def data_entry():
                     if uploaded_file is not None:
                         # Read the uploaded file.
                         df = pd.read_excel(uploaded_file)
-                        
+                        df = df.fillna('')
                         if "Umpire" not in df.columns:
                             st.error("The uploaded file must contain a column named 'Umpire'.")
                         else:
