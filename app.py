@@ -101,6 +101,22 @@ def data_entry():
                         # Note: The header is row 0; data rows start at row 1.
                         num_rows = len(df)  # data rows count (not including header)
                         num_cols = len(df.columns)
+
+                        # Define format for cells containing "X".
+                        x_format = workbook.add_format({
+                            'bg_color': '#FFC7CE',  # light red background for "X"
+                            'border': 1,
+                            'align': 'center',
+                            'valign': 'vcenter'
+                        })
+                        
+                        # Apply the "X" rule after the alternating rules so it overrides them.
+                        worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
+                            'type': 'formula',
+                            'criteria': '=TRIM(UPPER(A2))="X"',
+                            'format': x_format
+                        })
+            
             
                         # Define alternating row formats.
                         even_format = workbook.add_format({
@@ -127,21 +143,7 @@ def data_entry():
                             'format': odd_format
                         })
                         
-                        # Define format for cells containing "X".
-                        x_format = workbook.add_format({
-                            'bg_color': '#FFC7CE',  # light red background for "X"
-                            'border': 1,
-                            'align': 'center',
-                            'valign': 'vcenter'
-                        })
-                        
-                        # Apply the "X" rule after the alternating rules so it overrides them.
-                        worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
-                            'type': 'formula',
-                            'criteria': '=TRIM(UPPER(A2))="X"',
-                            'format': x_format
-                        })
-            
+
                         # Freeze the top row and first column.
                         worksheet.freeze_panes(1, 1)
             
