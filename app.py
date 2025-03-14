@@ -48,6 +48,7 @@ if selected_name != "Select an umpire":
             "Dates": selected_dates
         })
         st.success("Data saved successfully!")
+
     if selected_name == "Abigail":
         admin_password = st.text_input("Enter admin password to generate report", type="password")
         if admin_password:
@@ -74,11 +75,12 @@ if selected_name != "Select an umpire":
                     workbook  = writer.book
                     worksheet = writer.sheets["Availability"]
     
-                    # Create a format for headers: bold and centered.
+                    # Create a format for headers: bold, centered, and with a background color.
                     header_format = workbook.add_format({
                         'bold': True,
                         'align': 'center',
-                        'valign': 'vcenter'
+                        'valign': 'vcenter',
+                        'bg_color': '#D7E4BC'  # light green background; change as needed
                     })
                     # Create a format for all cells: center aligned.
                     cell_format = workbook.add_format({
@@ -88,7 +90,7 @@ if selected_name != "Select an umpire":
     
                     # Set the column width to 25 and apply cell format to all columns.
                     for i, col in enumerate(df.columns):
-                        worksheet.set_column(i, i, 30, cell_format)
+                        worksheet.set_column(i, i, 25, cell_format)
                     # Apply header formatting to the header row.
                     worksheet.set_row(0, None, header_format)
     
@@ -102,6 +104,7 @@ if selected_name != "Select an umpire":
                 )
             else:
                 st.error("Incorrect password.")
+
 
 else:
     with col2:
