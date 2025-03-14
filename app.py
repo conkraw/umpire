@@ -156,7 +156,124 @@ def data_entry():
             
                     buffer.seek(0)
                     st.download_button(label="Download Excel File",data=buffer,file_name="umpire_availability.xlsx",mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                    
+
+
+                    uploaded_file = st.file_uploader("Upload your umpire availability Excel file", type=["xlsx"])
+                    if uploaded_file is not None:
+                        # Read the uploaded file.
+                        df = pd.read_excel(uploaded_file)
+                        
+                        if "Umpire" not in df.columns:
+                            st.error("The uploaded file must contain a column named 'Umpire'.")
+                        else:
+                            # Group non-Umpire columns by field (location).
+                            # Expect headers in the format: "MM-DD-YYYY at TIME at LOCATION"
+                            location_to_columns = {}
+                            for col in df.columns:
+                                if col == "Umpire":
+                                    continue
+                                parts = col.split(" at ")
+                                if len(parts) >= 3:
+                                    date_str = parts[0]      # e.g. "03-30-2025"
+                                    time_str = parts[1]      # e.g. "1pm"
+                                    location = parts[2]      # e.g. "Gelder"
+                                    try:
+                                        dt = datetime.strptime(date_str, "%m-%d-%Y")
+                                        # Simplify date to "M-D" (e.g. "3-30")
+                                        simple_date = f"{dt.month}-{dt.day}"
+                                    except Exception as e:
+                                        simple_date = date_str
+                                    if location not in location_to_columns:
+                                        location_to_columns[location] = []
+                                    # Store original column name and the simplified date for the header.
+                                    location_to_columns[location].append((col, simple_date))
+                                else:
+                                    # If the header doesn't match, you can choose to group it under "Other"
+                                    if "Other" not in location_to_columns:
+                                        location_to_columns["Other"] = []
+                                    location_to_columns["Other"].append((col, col))
+                            
+                            # Now create an Excel file with one sheet that contains a separate table for each field.
+                            output = BytesIO()
+                            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                                workbook = writer.book
+                                worksheet = workbook.add_worksheet("Field Assignments")
+                                
+                                # Define some common formats.
+                                title_format = workbook.add_format({
+                                    'bold': True,
+                                    'font_size': 14
+                                })
+                                header_format = workbook.add_format({
+                                    'bold': True,
+                                    'bg_color': '#D7E4BC',  # light green background
+                                    'border': 1,
+                                    'align': 'center',
+                                    'valign': 'vcenter'
+                                })
+                                cell_format = workbook.add_format({
+                                    'border': 1,
+                                    'align': 'center',
+                                    'valign': 'vcenter'
+                                })
+                                
+                                current_row = 0  # starting row in the output sheet
+                                
+                                # For each field (location), write a table only if there is at least one assignment.
+                                for location, cols in location_to_columns.items():
+                                    # Build a temporary DataFrame for this field.
+                                    # We'll include the Umpire column plus all columns for this location.
+                                    df_field = df[["Umpire"] + [col for (col, _) in cols]].copy()
+                                    
+                                    # Filter rows: keep only those where at least one of the columns has an "X"
+                                    def has_assignment(row):
+                                        for col, _ in cols:
+                                            if str(row[col]).strip().upper() == "X":
+                                                return True
+                                        return False
+                                    df_field = df_field[df_field.apply(has_assignment, axis=1)]
+                                    
+                                    # Skip this field if there are no assignments.
+                                    if df_field.empty:
+                                        continue
+                                    
+                                    # Write the field title.
+                                    worksheet.write(current_row, 0, f"Field: {location}", title_format)
+                                    current_row += 1
+                                    
+                                    # Prepare the header row: first column is Umpire, then one column per date.
+                                    headers = ["Umpire"] + [simple_date for (_, simple_date) in cols]
+                                    for col_index, header in enumerate(headers):
+                                        worksheet.write(current_row, col_index, header, header_format)
+                                    current_row += 1
+                                    
+                                    # Write the data rows.
+                                    for _, row in df_field.iterrows():
+                                        worksheet.write(current_row, 0, row["Umpire"], cell_format)
+                                        for j, (orig_col, _) in enumerate(cols, start=1):
+                                            value = row[orig_col]
+                                            worksheet.write(current_row, j, value, cell_format)
+                                        current_row += 1
+                                    
+                                    # Leave one blank row between tables.
+                                    current_row += 1
+                                
+                                # (Optional) Set column widths for better readability.
+                                worksheet.set_column(0, 0, 20)  # Umpire column
+                                # For the rest, set a default width.
+                                max_cols = max([len(cols) for cols in location_to_columns.values()], default=0)
+                                for i in range(1, max_cols + 1):
+                                    worksheet.set_column(i, i, 12)
+                                
+                                writer.close()
+                            output.seek(0)
+                            
+                            st.download_button(
+                                label="Download Field Assignments Report",
+                                data=output,
+                                file_name="Field_Assignments_Report.xlsx",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            )
                 else:
                     st.error("Incorrect password.")
     else:
