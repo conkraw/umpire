@@ -159,6 +159,7 @@ def data_entry():
                     st.download_button(label="Download Excel File",data=buffer,file_name="umpire_availability.xlsx",mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
+                    # Abigail uploads the Excel file.
                     uploaded_file = st.file_uploader("Upload your umpire availability Excel file", type=["xlsx"])
                     if uploaded_file is not None:
                         # Read the uploaded file.
@@ -177,12 +178,12 @@ def data_entry():
                                     continue
                                 parts = col.split(" at ")
                                 if len(parts) >= 3:
-                                    date_str = parts[0]      # e.g. "03-30-2025"
-                                    time_str = parts[1]      # e.g. "1pm"
-                                    location = parts[2]      # e.g. "Gelder"
+                                    date_str = parts[0]      # e.g., "03-30-2025"
+                                    time_str = parts[1]      # e.g., "1pm"
+                                    location = parts[2]      # e.g., "Gelder"
                                     try:
                                         dt = datetime.strptime(date_str, "%m-%d-%Y")
-                                        # Simplify date to "M-D" (e.g. "3-30")
+                                        # Simplify date to "M-D" (e.g., "3-30")
                                         simple_date = f"{dt.month}-{dt.day}"
                                     except Exception as e:
                                         simple_date = date_str
@@ -209,7 +210,7 @@ def data_entry():
                                 })
                                 header_format = workbook.add_format({
                                     'bold': True,
-                                    'bg_color': '#D7E4BC',  # light green
+                                    'bg_color': '#D7E4BC',  # light green background
                                     'border': 1,
                                     'align': 'center',
                                     'valign': 'vcenter'
@@ -219,10 +220,17 @@ def data_entry():
                                     'align': 'center',
                                     'valign': 'vcenter'
                                 })
+                                # Default format for summary (total) row: yellow background.
+                                summary_default_format = workbook.add_format({
+                                    'bg_color': '#FFFF00',  # yellow
+                                    'border': 1,
+                                    'align': 'center',
+                                    'valign': 'vcenter'
+                                })
                                 
-                                current_row = 0  # starting row in output sheet
+                                current_row = 0  # starting row in the output sheet
                                 
-                                # For each field, write a table if there is at least one assignment.
+                                # Process each field (location) and write its table.
                                 for location, cols in location_to_columns.items():
                                     # Create a temporary DataFrame for this field.
                                     df_field = df[["Umpire"] + [col for (col, _) in cols]].copy()
@@ -235,7 +243,7 @@ def data_entry():
                                         return False
                                     df_field = df_field[df_field.apply(has_assignment, axis=1)]
                                     
-                                    # Skip if no assignments for this field.
+                                    # Skip this field if there are no assignments.
                                     if df_field.empty:
                                         continue
                                     
@@ -243,14 +251,14 @@ def data_entry():
                                     worksheet.write(current_row, 0, f"Field: {location}", title_format)
                                     current_row += 1
                                     
-                                    # Write header row.
+                                    # Prepare and write header row.
                                     headers = ["Umpire"] + [simple_date for (_, simple_date) in cols]
                                     header_row = current_row
                                     for col_index, header in enumerate(headers):
                                         worksheet.write(header_row, col_index, header, header_format)
                                     current_row += 1
                                     
-                                    # Data rows start here.
+                                    # Write data rows.
                                     data_start_row = current_row
                                     for _, row in df_field.iterrows():
                                         worksheet.write(current_row, 0, row["Umpire"], cell_format)
@@ -258,25 +266,52 @@ def data_entry():
                                             value = row[orig_col]
                                             worksheet.write(current_row, j, value, cell_format)
                                         current_row += 1
-                                    data_end_row = current_row - 1  # last data row index
+                                    data_end_row = current_row - 1  # index of last data row
                                     
-                                    # Write summary row with COUNTIF formulas.
+                                    # Write summary (total) row with COUNTIF formulas.
                                     summary_row = current_row
-                                    worksheet.write(summary_row, 0, "Total", cell_format)
+                                    # Write "Total" in the first column.
+                                    worksheet.write(summary_row, 0, "Total", summary_default_format)
                                     for j in range(1, len(headers)):
-                                        # Convert column index j to Excel column letter.
                                         col_letter = xl_col_to_name(j)
-                                        # Excel rows are 1-indexed. Data rows are from (data_start_row+1) to (data_end_row+1).
+                                        # Excel rows are 1-indexed.
                                         start_excel = data_start_row + 1
                                         end_excel = data_end_row + 1
                                         formula = f'=COUNTIF({col_letter}{start_excel}:{col_letter}{end_excel}, "X")'
-                                        worksheet.write_formula(summary_row, j, formula, cell_format)
-                                    current_row += 1
+                                        worksheet.write_formula(summary_row, j, formula, summary_default_format)
                                     
-                                    # Leave one blank row between tables.
-                                    current_row += 1
+                                    # Apply conditional formatting to the summary row cells (excluding column 0):
+                                    red_format = workbook.add_format({
+                                        'bg_color': '#FFC7CE',  # light red
+                                        'border': 1,
+                                        'align': 'center',
+                                        'valign': 'vcenter'
+                                    })
+                                    green_format = workbook.add_format({
+                                        'bg_color': '#C6EFCE',  # light green
+                                        'border': 1,
+                                        'align': 'center',
+                                        'valign': 'vcenter'
+                                    })
+                                    # If total is less than 2, color red.
+                                    worksheet.conditional_format(summary_row, 1, summary_row, len(headers)-1, {
+                                        'type': 'cell',
+                                        'criteria': '<',
+                                        'value': 2,
+                                        'format': red_format
+                                    })
+                                    # If total is greater than 3, color green.
+                                    worksheet.conditional_format(summary_row, 1, summary_row, len(headers)-1, {
+                                        'type': 'cell',
+                                        'criteria': '>',
+                                        'value': 3,
+                                        'format': green_format
+                                    })
+                                    
+                                    current_row += 1  # Move past the summary row.
+                                    current_row += 1  # Blank row between tables.
                                 
-                                # Optional: Set column widths for readability.
+                                # (Optional) Set column widths for readability.
                                 worksheet.set_column(0, 0, 20)  # Umpire column
                                 max_cols = max([len(cols) for cols in location_to_columns.values()], default=0)
                                 for i in range(1, max_cols + 1):
@@ -291,6 +326,8 @@ def data_entry():
                                 file_name="Field_Assignments_Report.xlsx",
                                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                             )
+                            
+
                 else:
                     st.error("Incorrect password.")
     else:
