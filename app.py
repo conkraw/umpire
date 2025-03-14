@@ -138,7 +138,7 @@ def data_entry():
                         # Apply the "X" rule after the alternating rules so it overrides them.
                         worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
                             'type': 'formula',
-                            'criteria': '=TRIM(UPPER(A2))="X"',
+                            'criteria': '=TRIM(UPPER(INDIRECT(ADDRESS(ROW(), COLUMN()))))="X"',
                             'format': x_format
                         })
             
