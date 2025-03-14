@@ -114,7 +114,21 @@ def data_entry():
                             'align': 'center',
                             'valign': 'vcenter'
                         })
-            
+
+                        even_formula = '=AND(MOD(ROW(),2)=0, INDIRECT(ADDRESS(ROW(), COLUMN()))<>"X")'
+                        odd_formula  = '=AND(MOD(ROW(),2)=1, INDIRECT(ADDRESS(ROW(), COLUMN()))<>"X")'
+                        
+                        worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
+                            'type': 'formula',
+                            'criteria': even_formula,
+                            'format': even_format
+                        })
+                        worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
+                            'type': 'formula',
+                            'criteria': odd_formula,
+                            'format': odd_format
+                        })
+
                         # Apply conditional formatting for alternating rows.
                         worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
                             'type': 'formula',
