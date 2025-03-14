@@ -140,6 +140,15 @@ def data_entry():
                             'align': 'center',
                             'valign': 'vcenter'
                         })
+
+
+                        # Use a formula-based conditional format to check each cell:
+                        worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
+                            'type': 'formula',
+                            'criteria': '=TRIM(UPPER(INDIRECT(ADDRESS(ROW(), COLUMN()))))="X"',
+                            'format': x_format
+                        })
+
                         worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
                             'type': 'cell',
                             'criteria': '==',
