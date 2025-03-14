@@ -95,7 +95,7 @@ def data_entry():
                         # Apply header formatting and set the column widths (applied once).
                         for i, col in enumerate(df.columns):
                             worksheet.write(0, i, col, header_format)
-                            worksheet.set_column(i, i, 20, cell_format)
+                            worksheet.set_column(i, i, 35, cell_format)
             
                         # Determine the data range.
                         # Note: The header is row 0; data rows start at row 1.
