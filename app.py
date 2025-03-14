@@ -88,7 +88,7 @@ if selected_name != "Select an umpire":
     
                     # Set the column width to 25 and apply cell format to all columns.
                     for i, col in enumerate(df.columns):
-                        worksheet.set_column(i, i, 25, cell_format)
+                        worksheet.set_column(i, i, 30, cell_format)
                     # Apply header formatting to the header row.
                     worksheet.set_row(0, None, header_format)
     
