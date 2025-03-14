@@ -162,7 +162,9 @@ def data_entry():
                     if uploaded_file is not None:
                         # Read the uploaded file.
                         df = pd.read_excel(uploaded_file)
+                        # Replace NaN/INF with empty strings.
                         df = df.fillna('')
+                        
                         if "Umpire" not in df.columns:
                             st.error("The uploaded file must contain a column named 'Umpire'.")
                         else:
@@ -185,28 +187,28 @@ def data_entry():
                                         simple_date = date_str
                                     if location not in location_to_columns:
                                         location_to_columns[location] = []
-                                    # Store original column name and the simplified date for the header.
+                                    # Store the original column name and the simplified date.
                                     location_to_columns[location].append((col, simple_date))
                                 else:
-                                    # If the header doesn't match, you can choose to group it under "Other"
+                                    # If header doesn't match, group under "Other"
                                     if "Other" not in location_to_columns:
                                         location_to_columns["Other"] = []
                                     location_to_columns["Other"].append((col, col))
                             
-                            # Now create an Excel file with one sheet that contains a separate table for each field.
+                            # Create an Excel file with one sheet that contains tables for each field.
                             output = BytesIO()
                             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
                                 workbook = writer.book
                                 worksheet = workbook.add_worksheet("Field Assignments")
                                 
-                                # Define some common formats.
+                                # Define common formats.
                                 title_format = workbook.add_format({
                                     'bold': True,
                                     'font_size': 14
                                 })
                                 header_format = workbook.add_format({
                                     'bold': True,
-                                    'bg_color': '#D7E4BC',  # light green background
+                                    'bg_color': '#D7E4BC',  # light green
                                     'border': 1,
                                     'align': 'center',
                                     'valign': 'vcenter'
@@ -217,15 +219,14 @@ def data_entry():
                                     'valign': 'vcenter'
                                 })
                                 
-                                current_row = 0  # starting row in the output sheet
+                                current_row = 0  # starting row in output sheet
                                 
-                                # For each field (location), write a table only if there is at least one assignment.
+                                # For each field, write a table if there is at least one assignment.
                                 for location, cols in location_to_columns.items():
-                                    # Build a temporary DataFrame for this field.
-                                    # We'll include the Umpire column plus all columns for this location.
+                                    # Create a temporary DataFrame for this field.
                                     df_field = df[["Umpire"] + [col for (col, _) in cols]].copy()
                                     
-                                    # Filter rows: keep only those where at least one of the columns has an "X"
+                                    # Filter rows: keep only rows with at least one "X" in any of these columns.
                                     def has_assignment(row):
                                         for col, _ in cols:
                                             if str(row[col]).strip().upper() == "X":
@@ -233,7 +234,7 @@ def data_entry():
                                         return False
                                     df_field = df_field[df_field.apply(has_assignment, axis=1)]
                                     
-                                    # Skip this field if there are no assignments.
+                                    # Skip if no assignments for this field.
                                     if df_field.empty:
                                         continue
                                     
@@ -241,26 +242,41 @@ def data_entry():
                                     worksheet.write(current_row, 0, f"Field: {location}", title_format)
                                     current_row += 1
                                     
-                                    # Prepare the header row: first column is Umpire, then one column per date.
+                                    # Write header row.
                                     headers = ["Umpire"] + [simple_date for (_, simple_date) in cols]
+                                    header_row = current_row
                                     for col_index, header in enumerate(headers):
-                                        worksheet.write(current_row, col_index, header, header_format)
+                                        worksheet.write(header_row, col_index, header, header_format)
                                     current_row += 1
                                     
-                                    # Write the data rows.
+                                    # Data rows start here.
+                                    data_start_row = current_row
                                     for _, row in df_field.iterrows():
                                         worksheet.write(current_row, 0, row["Umpire"], cell_format)
                                         for j, (orig_col, _) in enumerate(cols, start=1):
                                             value = row[orig_col]
                                             worksheet.write(current_row, j, value, cell_format)
                                         current_row += 1
+                                    data_end_row = current_row - 1  # last data row index
+                                    
+                                    # Write summary row with COUNTIF formulas.
+                                    summary_row = current_row
+                                    worksheet.write(summary_row, 0, "Total", cell_format)
+                                    for j in range(1, len(headers)):
+                                        # Convert column index j to Excel column letter.
+                                        col_letter = xl_col_to_name(j)
+                                        # Excel rows are 1-indexed. Data rows are from (data_start_row+1) to (data_end_row+1).
+                                        start_excel = data_start_row + 1
+                                        end_excel = data_end_row + 1
+                                        formula = f'=COUNTIF({col_letter}{start_excel}:{col_letter}{end_excel}, "X")'
+                                        worksheet.write_formula(summary_row, j, formula, cell_format)
+                                    current_row += 1
                                     
                                     # Leave one blank row between tables.
                                     current_row += 1
                                 
-                                # (Optional) Set column widths for better readability.
+                                # Optional: Set column widths for readability.
                                 worksheet.set_column(0, 0, 20)  # Umpire column
-                                # For the rest, set a default width.
                                 max_cols = max([len(cols) for cols in location_to_columns.values()], default=0)
                                 for i in range(1, max_cols + 1):
                                     worksheet.set_column(i, i, 12)
