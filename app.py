@@ -105,7 +105,8 @@ if selected_name != "Select an umpire":
                     alternate_format = workbook.add_format({
                         'bg_color': '#F2F2F2',  # light gray background; adjust as needed
                         'align': 'center',
-                        'valign': 'vcenter'
+                        'valign': 'vcenter',
+                        'border': 1
                     })
                     # Apply conditional formatting to data rows (starting at row 1)
                     worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
