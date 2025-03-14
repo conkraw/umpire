@@ -68,112 +68,96 @@ def data_entry():
                             row[date] = "X" if date in umpire_dates else ""
                         data.append(row)
                     df = pd.DataFrame(data)
-                    
+            
                     # Write DataFrame to an Excel file in memory.
                     buffer = BytesIO()
                     with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
                         df.to_excel(writer, index=False, sheet_name="Availability")
                         workbook  = writer.book
                         worksheet = writer.sheets["Availability"]
-        
-                        # Create a format for headers: bold, centered, with a background color, and a border.
+            
+                        # Create header format.
                         header_format = workbook.add_format({
                             'bold': True,
                             'align': 'center',
                             'valign': 'vcenter',
-                            'bg_color': '#D7E4BC',  # light green background; change as needed
+                            'bg_color': '#D7E4BC',  # light green background
                             'border': 1
                         })
-                        # Create a default format for all cells: center aligned.
+                        # Create a default cell format that includes center alignment, border, and text wrap.
                         cell_format = workbook.add_format({
                             'align': 'center',
-                            'valign': 'vcenter'
+                            'valign': 'vcenter',
+                            'border': 1,
+                            'text_wrap': True
                         })
-        
-                        # Set the column width to 35 and apply the default cell format.
+            
+                        # Apply header formatting and set the column widths (applied once).
                         for i, col in enumerate(df.columns):
-                            worksheet.set_column(i, i, 35, cell_format)
-                            # Overwrite the header cell with header_format if there's content.
-                            if col:
-                                worksheet.write(0, i, col, header_format)
-                            else:
-                                worksheet.write(0, i, col, cell_format)
-        
-                        # Determine the data range for conditional formatting.
-                        # Data rows start at row 1 (since row 0 is the header) through row index len(df)
-                        num_rows = len(df)
+                            worksheet.write(0, i, col, header_format)
+                            worksheet.set_column(i, i, 20, cell_format)
+            
+                        # Determine the data range.
+                        # Note: The header is row 0; data rows start at row 1.
+                        num_rows = len(df)  # data rows count (not including header)
                         num_cols = len(df.columns)
-        
-                        # Define a format for even rows with a light gray background and border.
+            
+                        # Define alternating row formats.
                         even_format = workbook.add_format({
-                            'bg_color': '#F2F2F2',  # light gray background; adjust as needed
+                            'bg_color': '#F2F2F2',  # light gray background
                             'border': 1,
                             'align': 'center',
                             'valign': 'vcenter'
                         })
-                        # Define a format for odd rows with just the border.
                         odd_format = workbook.add_format({
                             'border': 1,
                             'align': 'center',
                             'valign': 'vcenter'
                         })
-        
-                        # Apply conditional formatting to even rows (Excel rows with even numbers)
+            
+                        # Apply conditional formatting for alternating rows.
                         worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
                             'type': 'formula',
                             'criteria': '=MOD(ROW(),2)=0',
                             'format': even_format
                         })
-                        # Apply conditional formatting to odd rows (Excel rows with odd numbers)
                         worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
                             'type': 'formula',
                             'criteria': '=MOD(ROW(),2)=1',
                             'format': odd_format
                         })
-
-                    # Freeze the top row and first column for easier navigation
-                    worksheet.freeze_panes(1, 1)
-                    
-                    # Enable an auto filter on the header row
-                    worksheet.autofilter(0, 0, num_rows, num_cols - 1)
-                    
-                    # Adjust column widths with a wrap format to handle long text
-                    wrap_format = workbook.add_format({
-                        'align': 'center',
-                        'valign': 'vcenter',
-                        'text_wrap': True,
-                        'border': 1
-                    })
-                    for i, col in enumerate(df.columns):
-                        worksheet.set_column(i, i, 20, wrap_format)
-                    
-                    # Optional: Highlight cells containing "X"
-                    worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
-                        'type': 'cell',
-                        'criteria': '==',
-                        'value': '"X"',
-                        'format': workbook.add_format({
-                            'bg_color': '#FFC7CE',
+            
+                        # Freeze the top row and first column.
+                        worksheet.freeze_panes(1, 1)
+            
+                        # Enable an auto filter on the header row.
+                        worksheet.autofilter(0, 0, num_rows, num_cols - 1)
+            
+                        # Highlight cells containing "X" (this rule will override alternating colors for those cells).
+                        x_format = workbook.add_format({
+                            'bg_color': '#FFC7CE',  # light red background
                             'border': 1,
                             'align': 'center',
                             'valign': 'vcenter'
                         })
-                    })
-                    
-                    # Page setup for printing/viewing
-                    worksheet.set_landscape()
-                    worksheet.fit_to_pages(1, 0)
-
+                        worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
+                            'type': 'cell',
+                            'criteria': '==',
+                            'value': '"X"',
+                            'format': x_format
+                        })
+            
+                        # Page setup: landscape and fit columns to one page width.
+                        worksheet.set_landscape()
+                        worksheet.fit_to_pages(1, 0)
+            
                     buffer.seek(0)
-        
                     st.download_button(
                         label="Download Excel File",
                         data=buffer,
                         file_name="umpire_availability.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     )
-                        # [Your Excel report generation code goes here]
-                        # For brevity, that part is omitted in this snippet.
                 else:
                     st.error("Incorrect password.")
     else:
