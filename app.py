@@ -47,6 +47,7 @@ def data_entry():
                     "Dates": selected_dates
                 })
                 st.success("Data saved successfully!")
+                st.rerun()
         else:
             # For Abigail, display the admin password input.
             admin_password = st.text_input("Enter admin password to generate report", type="password")
