@@ -48,8 +48,6 @@ if selected_name != "Select an umpire":
             "Dates": selected_dates
         })
         st.success("Data saved successfully!")
-
-    # If the selected umpire is Abigail, show the admin password input and report generation.
     if selected_name == "Abigail":
         admin_password = st.text_input("Enter admin password to generate report", type="password")
         if admin_password:
@@ -68,13 +66,34 @@ if selected_name != "Select an umpire":
                         row[date] = "X" if date in umpire_dates else ""
                     data.append(row)
                 df = pd.DataFrame(data)
-
+    
                 # Write DataFrame to an Excel file in memory.
                 buffer = BytesIO()
                 with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
                     df.to_excel(writer, index=False, sheet_name="Availability")
+                    workbook  = writer.book
+                    worksheet = writer.sheets["Availability"]
+    
+                    # Create a format for headers: bold and centered.
+                    header_format = workbook.add_format({
+                        'bold': True,
+                        'align': 'center',
+                        'valign': 'vcenter'
+                    })
+                    # Create a format for all cells: center aligned.
+                    cell_format = workbook.add_format({
+                        'align': 'center',
+                        'valign': 'vcenter'
+                    })
+    
+                    # Set the column width to 25 and apply cell format to all columns.
+                    for i, col in enumerate(df.columns):
+                        worksheet.set_column(i, i, 25, cell_format)
+                    # Apply header formatting to the header row.
+                    worksheet.set_row(0, None, header_format)
+    
                 buffer.seek(0)
-
+    
                 st.download_button(
                     label="Download Excel File",
                     data=buffer,
@@ -83,6 +102,7 @@ if selected_name != "Select an umpire":
                 )
             else:
                 st.error("Incorrect password.")
+
 else:
     with col2:
         st.multiselect("Select date(s)", available_dates, default=[])
