@@ -75,12 +75,13 @@ if selected_name != "Select an umpire":
                     workbook  = writer.book
                     worksheet = writer.sheets["Availability"]
     
-                    # Create a format for headers: bold, centered, and with a background color.
+                    # Create a format for headers: bold, centered, with a background color, and a border.
                     header_format = workbook.add_format({
                         'bold': True,
                         'align': 'center',
                         'valign': 'vcenter',
-                        'bg_color': '#D7E4BC'  # light green background; change as needed
+                        'bg_color': '#D7E4BC',  # light green background; change as needed
+                        'border': 1
                     })
                     # Create a format for all cells: center aligned.
                     cell_format = workbook.add_format({
@@ -107,6 +108,7 @@ if selected_name != "Select an umpire":
                 )
             else:
                 st.error("Incorrect password.")
+    
 
 
 
