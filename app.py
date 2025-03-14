@@ -39,23 +39,36 @@ def data_entry():
         with col2:
             selected_dates = st.multiselect("Select date(s)", available_dates, default=existing_dates)
     
-        if st.button("Save"):
-            # Save the user's data.
-            doc_ref.set({
-                "Umpire": selected_name,
-                "Dates": selected_dates
-            })
-            st.success("Data saved successfully!")
-            # Move to the confirmation screen.
-            st.session_state.page = 'confirmation'
-            st.rerun()
+        if selected_name != "Abigail":
+            if st.button("Save"):
+                # Save the user's data.
+                doc_ref.set({
+                    "Umpire": selected_name,
+                    "Dates": selected_dates
+                })
+                st.success("Data saved successfully!")
+                # You can also update the session state here if needed.
+        else:
+            admin_password = st.text_input("Enter admin password to generate report", type="password")
+
+        with col2:
+            selected_dates = st.multiselect("Select date(s)", available_dates, default=existing_dates)
         
-        # Include the admin/report generation part (if needed).
-        if selected_name == "Abigail":
+        if selected_name != "Abigail":
+            if st.button("Save"):
+                # Save the user's data.
+                doc_ref.set({
+                    "Umpire": selected_name,
+                    "Dates": selected_dates
+                })
+                st.success("Data saved successfully!")
+        else:
+            # For Abigail, display the admin password input.
             admin_password = st.text_input("Enter admin password to generate report", type="password")
             if admin_password:
                 if admin_password == "sw33tchoc":
                     st.success("Password correct. Generating Excel report...")
+                    # Retrieve all umpire documents.
                     umpire_docs = list(db.collection("chocolateumpire").stream())
                     data = []
                     for doc in umpire_docs:
@@ -68,7 +81,7 @@ def data_entry():
                             row[date] = "X" if date in umpire_dates else ""
                         data.append(row)
                     df = pd.DataFrame(data)
-        
+                    
                     # Write DataFrame to an Excel file in memory.
                     buffer = BytesIO()
                     with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
