@@ -48,7 +48,7 @@ def data_entry():
             st.success("Data saved successfully!")
             # Move to the confirmation screen.
             st.session_state.page = 'confirmation'
-            st.experimental_rerun()
+            st.rerun()
         
         # Include the admin/report generation part (if needed).
         if selected_name == "Abigail":
@@ -155,11 +155,11 @@ def confirmation():
     # Provide an option to go back if the user needs to change something.
     if st.button("Go Back"):
         st.session_state.page = 'data_entry'
-        st.experimental_rerun()
+        st.rerun()
     # Provide an option to finish the session.
     if st.button("Save & End Session"):
         st.session_state.page = 'final'
-        st.experimental_rerun()
+        st.rerun()
 
 # Define the final screen.
 def final():
