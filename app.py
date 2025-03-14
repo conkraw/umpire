@@ -38,21 +38,6 @@ def data_entry():
     
         with col2:
             selected_dates = st.multiselect("Select date(s)", available_dates, default=existing_dates)
-    
-        if selected_name != "Abigail":
-            if st.button("Save"):
-                # Save the user's data.
-                doc_ref.set({
-                    "Umpire": selected_name,
-                    "Dates": selected_dates
-                })
-                st.success("Data saved successfully!")
-                # You can also update the session state here if needed.
-        else:
-            admin_password = st.text_input("Enter admin password to generate report", type="password")
-
-        with col2:
-            selected_dates = st.multiselect("Select date(s)", available_dates, default=existing_dates)
         
         if selected_name != "Abigail":
             if st.button("Save"):
