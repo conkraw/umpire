@@ -92,11 +92,27 @@ if selected_name != "Select an umpire":
                     # Set the column width to 25 and apply cell format to all columns.
                     for i, col in enumerate(df.columns):
                         worksheet.set_column(i, i, 35, cell_format)
-                        # Overwrite the header cell: if the header is not empty, use header_format; otherwise, use cell_format.
+                        # Overwrite the header cell with header_format if there's content.
                         if col:
                             worksheet.write(0, i, col, header_format)
                         else:
                             worksheet.write(0, i, col, cell_format)
+    
+                    # Determine the data range for conditional formatting.
+                    num_rows = len(df)  # Number of data rows (excluding header)
+                    num_cols = len(df.columns)
+                    # Define an alternating row format for even rows.
+                    alternate_format = workbook.add_format({
+                        'bg_color': '#F2F2F2',  # light gray background; adjust as needed
+                        'align': 'center',
+                        'valign': 'vcenter'
+                    })
+                    # Apply conditional formatting to data rows (starting at row 1)
+                    worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
+                        'type': 'formula',
+                        'criteria': '=MOD(ROW(),2)=0',
+                        'format': alternate_format
+                    })
     
                 buffer.seek(0)
     
@@ -108,8 +124,6 @@ if selected_name != "Select an umpire":
                 )
             else:
                 st.error("Incorrect password.")
-    
-
 
 
 else:
