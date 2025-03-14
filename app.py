@@ -48,6 +48,7 @@ def data_entry():
             st.success("Data saved successfully!")
             # Move to the confirmation screen.
             st.session_state.page = 'confirmation'
+            st.experimental_rerun()
         
         # Include the admin/report generation part (if needed).
         if selected_name == "Abigail":
