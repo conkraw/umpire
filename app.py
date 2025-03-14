@@ -138,7 +138,7 @@ def data_entry():
                         # Apply the "X" rule after the alternating rules so it overrides them.
                         worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
                             'type': 'formula',
-                            'criteria': '=TRIM(UPPER(INDIRECT(ADDRESS(ROW(), COLUMN()))))="X"',
+                            'criteria': '=TRIM(UPPER(A2))="X"',
                             'format': x_format
                         })
             
@@ -147,29 +147,6 @@ def data_entry():
             
                         # Enable an auto filter on the header row.
                         worksheet.autofilter(0, 0, num_rows, num_cols - 1)
-            
-                        # Highlight cells containing "X" (this rule will override alternating colors for those cells).
-                        x_format = workbook.add_format({
-                            'bg_color': '#FFC7CE',  # light red background
-                            'border': 1,
-                            'align': 'center',
-                            'valign': 'vcenter'
-                        })
-
-
-                        # Use a formula-based conditional format to check each cell:
-                        worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
-                            'type': 'formula',
-                            'criteria': '=TRIM(UPPER(INDIRECT(ADDRESS(ROW(), COLUMN()))))="X"',
-                            'format': x_format
-                        })
-
-                        worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
-                            'type': 'cell',
-                            'criteria': '==',
-                            'value': '"X"',
-                            'format': x_format
-                        })
             
                         # Page setup: landscape and fit columns to one page width.
                         worksheet.set_landscape()
