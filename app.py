@@ -83,13 +83,13 @@ if selected_name != "Select an umpire":
                         'bg_color': '#D7E4BC',  # light green background; change as needed
                         'border': 1
                     })
-                    # Create a format for all cells: center aligned.
+                    # Create a default format for all cells: center aligned.
                     cell_format = workbook.add_format({
                         'align': 'center',
                         'valign': 'vcenter'
                     })
     
-                    # Set the column width to 25 and apply cell format to all columns.
+                    # Set the column width to 35 and apply the default cell format.
                     for i, col in enumerate(df.columns):
                         worksheet.set_column(i, i, 35, cell_format)
                         # Overwrite the header cell with header_format if there's content.
@@ -99,20 +99,35 @@ if selected_name != "Select an umpire":
                             worksheet.write(0, i, col, cell_format)
     
                     # Determine the data range for conditional formatting.
-                    num_rows = len(df)  # Number of data rows (excluding header)
+                    # Data rows start at row 1 (since row 0 is the header) through row index len(df)
+                    num_rows = len(df)
                     num_cols = len(df.columns)
-                    # Define an alternating row format for even rows.
-                    alternate_format = workbook.add_format({
+    
+                    # Define a format for even rows with a light gray background and border.
+                    even_format = workbook.add_format({
                         'bg_color': '#F2F2F2',  # light gray background; adjust as needed
+                        'border': 1,
                         'align': 'center',
-                        'valign': 'vcenter',
-                        'border': 1
+                        'valign': 'vcenter'
                     })
-                    # Apply conditional formatting to data rows (starting at row 1)
+                    # Define a format for odd rows with just the border.
+                    odd_format = workbook.add_format({
+                        'border': 1,
+                        'align': 'center',
+                        'valign': 'vcenter'
+                    })
+    
+                    # Apply conditional formatting to even rows (Excel rows with even numbers)
                     worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
                         'type': 'formula',
                         'criteria': '=MOD(ROW(),2)=0',
-                        'format': alternate_format
+                        'format': even_format
+                    })
+                    # Apply conditional formatting to odd rows (Excel rows with odd numbers)
+                    worksheet.conditional_format(1, 0, num_rows, num_cols - 1, {
+                        'type': 'formula',
+                        'criteria': '=MOD(ROW(),2)=1',
+                        'format': odd_format
                     })
     
                 buffer.seek(0)
@@ -125,6 +140,7 @@ if selected_name != "Select an umpire":
                 )
             else:
                 st.error("Incorrect password.")
+
 
 
 else:
