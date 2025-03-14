@@ -155,12 +155,8 @@ def data_entry():
                         worksheet.fit_to_pages(1, 0)
             
                     buffer.seek(0)
-                    st.download_button(
-                        label="Download Excel File",
-                        data=buffer,
-                        file_name="umpire_availability.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    )
+                    st.download_button(label="Download Excel File",data=buffer,file_name="umpire_availability.xlsx",mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    
                 else:
                     st.error("Incorrect password.")
     else:
