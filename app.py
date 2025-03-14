@@ -47,6 +47,7 @@ def data_entry():
                     "Dates": selected_dates
                 })
                 st.success("Data saved successfully!")
+                st.session_state.page = 'confirmation'
                 st.rerun()
         else:
             # For Abigail, display the admin password input.
