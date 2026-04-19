@@ -15,7 +15,6 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 st.set_page_config(page_title="Umpire QR Document Generator", layout="centered")
 
 st.title("Umpire QR Document Generator")
-st.write("Upload an Excel file with columns: date, coach, umpire")
 
 REDCAP_LINK = "https://redcap.ctsi.psu.edu/surveys/?s=J3K9DE4TL8FR8XXC"
 
