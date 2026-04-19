@@ -61,7 +61,15 @@ def make_docx(row):
     umpire = str(row["umpire"]).strip()
     date_str = format_date(row["date"])
 
-    qr_img = make_qr_image(REDCAP_LINK)
+    from urllib.parse import quote
+
+    coach_encoded = quote(coach)
+    umpire_encoded = quote(umpire)
+    date_encoded = quote(date_str)
+    
+    qr_text = f"https://redcap.ctsi.psu.edu/surveys/?s=J3K9DE4TL8FR8XXC&coach={coach_encoded}&umpire={umpire_encoded}&date={date_encoded}"
+    
+    qr_img = make_qr_image(qr_text)
 
     doc = Document()
 
@@ -108,13 +116,6 @@ def make_docx(row):
     p5.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
     qr_run = p5.add_run()
     qr_run.add_picture(qr_img, width=Inches(2.25))
-
-    doc.add_paragraph("")
-
-    # Survey link text
-    p6 = doc.add_paragraph()
-    p6.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-    p6.add_run(REDCAP_LINK)
 
     output = io.BytesIO()
     doc.save(output)
