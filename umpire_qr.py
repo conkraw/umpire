@@ -76,6 +76,13 @@ def make_docx(row):
 
     doc = Document()
 
+        # Logo at top
+    if LOGO_PATH.exists():
+        logo_p = doc.add_paragraph()
+        logo_p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        logo_run = logo_p.add_run()
+        logo_run.add_picture(str(LOGO_PATH), width=Inches(2.0))
+
     # Title
     title = doc.add_paragraph()
     title.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
@@ -159,10 +166,11 @@ if uploaded_file is not None:
                 for i, row in df.iterrows():
                     coach = clean_filename(row["coach"])
                     umpire = clean_filename(row["umpire"])
-
-                    filename = f"{coach}_{umpire}.docx"
+                    date_str = clean_filename(format_date(row["date"]))
+                
+                    filename = f"{date_str}_{coach}_{umpire}.docx"
                     docx_file = make_docx(row)
-
+                
                     zf.writestr(filename, docx_file.read())
 
             zip_buffer.seek(0)
