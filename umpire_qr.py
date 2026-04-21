@@ -9,6 +9,10 @@ from docx import Document
 from docx.shared import Inches
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
+from pathlib import Path
+
+LOGO_PATH = Path("hershey_baseball_umpire_assessment.png")
+
 # -----------------------------------
 # PAGE SETUP
 # -----------------------------------
